@@ -5,6 +5,11 @@
 -- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sebastien Rocca-Serra
 
+local function checkPositiveInteger(number, name)
+  assert(number >= 0, name .. ' must be a valid positive number')
+  assert(math.floor(number) == number, name .. ' must be an integer')
+end
+
 
 local function version(major, minor, patch)
   assert(major, "At least one parameter is needed")
@@ -17,6 +22,10 @@ local function version(major, minor, patch)
 
   patch = patch or 0
   minor = minor or 0
+
+  checkPositiveInteger(major, "major")
+  checkPositiveInteger(minor, "minor")
+  checkPositiveInteger(patch, "patch")
 
   return {major=major, minor=minor, patch=patch}
 end
