@@ -11,6 +11,22 @@ local function checkPositiveInteger(number, name)
 end
 
 
+local mt = {
+  __eq = function(self, other)
+    return self.major == other.major and
+           self.minor == other.minor and
+           self.patch == other.patch
+  end,
+  __lt = function(self, other)
+    return self.major < other.major or
+           self.minor < other.minor or
+           self.patch < other.patch
+  end,
+  __tostring = function(self)
+    return ("%d.%d.%d"):format(self.major, self.minor, self.patch)
+  end
+}
+
 local function version(major, minor, patch)
   assert(major, "At least one parameter is needed")
 
@@ -27,7 +43,7 @@ local function version(major, minor, patch)
   checkPositiveInteger(minor, "minor")
   checkPositiveInteger(patch, "patch")
 
-  return {major=major, minor=minor, patch=patch}
+  return setmetatable({major=major, minor=minor, patch=patch}, mt)
 end
 
 return version
