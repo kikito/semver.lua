@@ -5,29 +5,43 @@
 -- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- Based on YaciCode, from Julien Patte and LuaObject, from Sebastien Rocca-Serra
 
+local version
+
 local function checkPositiveInteger(number, name)
   assert(number >= 0, name .. ' must be a valid positive number')
   assert(math.floor(number) == number, name .. ' must be an integer')
 end
 
+local methods = {}
 
-local mt = {
-  __eq = function(self, other)
-    return self.major == other.major and
-           self.minor == other.minor and
-           self.patch == other.patch
-  end,
-  __lt = function(self, other)
-    return self.major < other.major or
-           self.minor < other.minor or
-           self.patch < other.patch
-  end,
-  __tostring = function(self)
-    return ("%d.%d.%d"):format(self.major, self.minor, self.patch)
-  end
-}
+function methods:nextMajor()
+  return version(self.major + 1, 0, 0)
+end
+function methods:nextMinor()
+  return version(self.major, self.minor + 1, 0)
+end
+function methods:nextPatch()
+  return version(self.major, self.minor, self.patch + 1)
+end
 
-local function version(major, minor, patch)
+local mt = { __index = methods }
+function mt:__eq(other)
+  return self.major == other.major and
+         self.minor == other.minor and
+         self.patch == other.patch
+end
+function mt:__lt(other)
+  return self.major < other.major or
+         self.minor < other.minor or
+         self.patch < other.patch
+end
+function mt:__tostring()
+  return ("%d.%d.%d"):format(self.major, self.minor, self.patch)
+end
+
+
+-- defined as local at the begining of the file
+version = function(major, minor, patch)
   assert(major, "At least one parameter is needed")
 
   if type(major) == 'string' then
