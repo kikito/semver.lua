@@ -6,41 +6,41 @@ See http://semver.org/ for details about semantic versioning.
 
 h1. Documentation
 
-``` lua
-    local v = require 'semver'
+<pre class="lua">
+local v = require 'semver'
 
-    -- accepts integers and numbers
-    v1 = v(1,0,0)
-    v2_5_1 = v('2.5.1')
+-- accepts integers and numbers
+v1 = v(1,0,0)
+v2_5_1 = v('2.5.1')
 
-    -- major, minor and patch attributes
-    v2_5_1.major -- 2
-    v2_5_1.minor -- 5
-    v2_5_1.patch -- 1
+-- major, minor and patch attributes
+v2_5_1.major -- 2
+v2_5_1.minor -- 5
+v2_5_1.patch -- 1
 
-    -- also accepts prerelease/build parameters:
-    a = v(1,0,0,'-alpha')
-    a.prerelease -- 'alpha'
+-- also accepts prerelease/build parameters:
+a = v(1,0,0,'-alpha')
+a.prerelease -- 'alpha'
 
-    b = v'0.9.5+no.extensions.22'
-    b.build -- 'no.extensions.22'
+b = v'0.9.5+no.extensions.22'
+b.build -- 'no.extensions.22'
 
-    -- comparison & sorting
-    v'1.2.3' == v(1,2,3) -- true
-    v'1.2.3' < v(4,5,6)  -- true
+-- comparison & sorting
+v'1.2.3' == v(1,2,3) -- true
+v'1.2.3' < v(4,5,6)  -- true
 
-    -- "pessimistic upgrade" operator: ^
-    -- a ^ b returns true if it's safe to update from a to b
-    v'2.0.1' ^ v'2.5.1' -- true - it's safe to upgrade from 2.0.1 to 2.5.1
-    v'1.0.0' ^ v'2.0.0' -- false - 2.0.0 is not supposed to be backwards-compatible
-    v'2.5.1' ^ v'2.0.1' -- false - 2.5.1 is more modern than 2.0.1.
+-- "pessimistic upgrade" operator: ^
+-- a ^ b returns true if it's safe to update from a to b
+v'2.0.1' ^ v'2.5.1' -- true - it's safe to upgrade from 2.0.1 to 2.5.1
+v'1.0.0' ^ v'2.0.0' -- false - 2.0.0 is not supposed to be backwards-compatible
+v'2.5.1' ^ v'2.0.1' -- false - 2.5.1 is more modern than 2.0.1.
 
-    -- bumping
-    v(1,0,0):nextPatch() -- v1.0.1
-    v(1,2,3):nextMinor() -- v1.3.0 . Notice the patch resets to 0
-    v(1,2,3):nextMajor() -- v2.0.0 . Minor and patch are reset to 0
+-- bumping
+v(1,0,0):nextPatch() -- v1.0.1
+v(1,2,3):nextMinor() -- v1.3.0 . Notice the patch resets to 0
+v(1,2,3):nextMajor() -- v2.0.0 . Minor and patch are reset to 0
 
-```
+</pre>
 
 
 h1. Installation
