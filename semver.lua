@@ -12,6 +12,16 @@ local function checkPositiveInteger(number, name)
   assert(math.floor(number) == number, name .. ' must be an integer')
 end
 
+local function present(value)
+  return value and value ~= ''
+end
+
+local function filterPrerelease(prerelease)
+  local identifiers = prerelease:match("-([%w-][%.%w-]+)")
+  assert(identifiers, ("The prerelease %q must start with a dash and be followed by dashes, alphanumerics or dots."):format(prerelease))
+  return identifiers
+end
+
 local methods = {}
 
 function methods:nextMajor()
@@ -28,7 +38,8 @@ local mt = { __index = methods }
 function mt:__eq(other)
   return self.major == other.major and
          self.minor == other.minor and
-         self.patch == other.patch
+         self.patch == other.patch and
+         self.prerelease == other.prerelease
 end
 function mt:__lt(other)
   return self.major < other.major or
@@ -40,18 +51,23 @@ function mt:__pow(other)
          self.minor <= other.minor
 end
 function mt:__tostring()
-  return ("%d.%d.%d"):format(self.major, self.minor, self.patch)
+  local buffer = { ("%d.%d.%d"):format(self.major, self.minor, self.patch) }
+  if self.prerelease then table.insert(buffer, "-" .. self.prerelease) end
+  return table.concat(buffer)
 end
 
 
 -- defined as local at the begining of the file
-version = function(major, minor, patch)
+version = function(major, minor, patch, prerelease)
   assert(major, "At least one parameter is needed")
 
   if type(major) == 'string' then
-    local sMajor, sMinor, sPatch = major:match("^(%d+)%.?(%d*)%.?(%d*)$")
-    assert(type(sMajor) == 'string', ("Could not version number(s) from %q"):format(major))
+    local sMajor, sMinor, sPatch, sPrerelease = major:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+    assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(major))
     major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
+    if present(sPrerelease) then
+      prerelease = filterPrerelease(sPrerelease)
+    end
   end
 
   patch = patch or 0
@@ -61,7 +77,8 @@ version = function(major, minor, patch)
   checkPositiveInteger(minor, "minor")
   checkPositiveInteger(patch, "patch")
 
-  return setmetatable({major=major, minor=minor, patch=patch}, mt)
+  local result = {major=major, minor=minor, patch=patch, prerelease=prerelease}
+  return setmetatable(result, mt)
 end
 
 return version

@@ -1,9 +1,10 @@
 local v = require 'semver'
 
-local function checkVersion(ver, major, minor, patch)
+local function checkVersion(ver, major, minor, patch, prerelease)
   assert_equal(major, ver.major)
   assert_equal(minor, ver.minor)
   assert_equal(patch, ver.patch)
+  assert_equal(prerelease, ver.prerelease)
 end
 
 context('semver', function()
@@ -22,6 +23,10 @@ context('semver', function()
       it('parses 1 number correctly', function()
         checkVersion(v(1), 1,0,0)
       end)
+
+      it('parses prereleases, if they exist', function()
+        checkVersion(v(1,2,3,"alpha"), 1,2,3,"alpha")
+      end)
     end)
 
     describe("from strings", function()
@@ -36,6 +41,9 @@ context('semver', function()
       end)
       test("5", function()
         checkVersion( v'5', 5,0,0)
+      end)
+      test("1.2.3-alpha", function()
+        checkVersion( v'1.2.3-alpha', 1,2,3,'alpha' )
       end)
     end)
 
@@ -72,6 +80,10 @@ context('semver', function()
     it("works with major, minor and patch", function()
       assert_equal("1.2.3", tostring(v(1,2,3)))
     end)
+
+    it("works with a prerelease", function()
+      assert_equal("1.2.3-beta", tostring(v(1,2,3,'beta')))
+    end)
   end)
 
   describe("==", function()
@@ -80,6 +92,9 @@ context('semver', function()
     end)
     it("is false when major, minor and patch are not the same", function()
       assert_not_equal(v(1,2,3), v(4,5,6))
+    end)
+    it("false if all is the same except the prerelease", function()
+      assert_not_equal(v(1,2,3), v'1.2.3-alpha')
     end)
   end)
 
