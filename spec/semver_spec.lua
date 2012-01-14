@@ -127,4 +127,31 @@ context('semver', function()
       assert_equal(v'2.0.0', v'1.2.3':nextMajor())
     end)
   end)
+
+
+  -- This works like the "pessimisstic operator" in Rubygems.
+  -- if a and b are versions, a ^ b means "b is backwards-compatible with a"
+  -- in other words, "it's safe to upgrade from a to b"
+  describe("^", function()
+    test("true for self", function()
+      assert_true(v(1,2,3) ^ v(1,2,3))
+    end)
+    test("different major versions mean it's always unsafe", function()
+      assert_false(v(2,0,0) ^ v(3,0,0))
+      assert_false(v(2,0,0) ^ v(1,0,0))
+    end)
+
+    test("patch versions are always compatible", function()
+      assert_true(v(1,2,3) ^ v(1,2,0))
+      assert_true(v(1,2,3) ^ v(1,2,5))
+    end)
+
+    test("it's safe to upgrade to a newer minor version", function()
+      assert_true(v(1,2,0) ^ v(1,5,0))
+    end)
+    test("it's unsafe to downgrade to an earlier minor version", function()
+      assert_false(v(1,5,0) ^ v(1,2,0))
+    end)
+  end)
+
 end)

@@ -35,6 +35,10 @@ function mt:__lt(other)
          self.minor < other.minor or
          self.patch < other.patch
 end
+function mt:__pow(other)
+  return self.major == other.major and
+         self.minor <= other.minor
+end
 function mt:__tostring()
   return ("%d.%d.%d"):format(self.major, self.minor, self.patch)
 end
