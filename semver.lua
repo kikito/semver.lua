@@ -19,9 +19,56 @@ end
 local function parsePrerelease(extra)
   if not present(extra) then return end
 
-  local prerelease = extra:match("-([%w-][%.%w-]+)")
+  local prerelease = extra:match("-([%w-][%.%w-]*)")
   assert(prerelease, ("The prerelease %q must start with a dash and be followed by dashes, alphanumerics or dots."):format(extra))
   return prerelease
+end
+
+-- return 0 if a == b, -1 if a < b, and 1 if a > b
+local function compare(a,b)
+  return a == b and 0 or a < b and -1 or 1
+end
+
+local function compareIds(selfId, otherId)
+  if not selfId and not otherId then return 0
+  elseif not selfId then return             1
+  elseif not otherId then return           -1
+  end
+
+  local selfNumber, otherNumber = tonumber(selfId), tonumber(otherId)
+
+  if selfNumber and otherNumber then -- numerical comparison
+    return compare(selfNumber, otherNumber)
+  elseif selfNumber then -- numericals are always smaller than alphanums
+    return -1
+  else
+    return compare(selfId, otherId) -- alphanumerical comparison
+  end
+end
+
+local function splitByDot(str)
+  local t, count = {}, 0
+  str:gsub("([^%.]+)", function(c)
+    count = count + 1
+    t[count] = c
+  end)
+  return t
+end
+
+local function smallerExtra(selfExtra, otherExtra)
+  if selfExtra == otherExtra then return false end
+
+  local selfIds, otherIds = splitByDot(selfExtra), splitByDot(otherExtra)
+  local selfLength = #selfIds
+  local comparison
+
+  for i = 1, selfLength do
+    comparison = compareIds(selfIds[i], otherIds[i])
+    if comparison ~= 0 then return comparison == -1 end
+    -- if comparison == 0, continue loop
+  end
+
+  return selfLength < #otherIds
 end
 
 local methods = {}
@@ -46,7 +93,9 @@ end
 function mt:__lt(other)
   return self.major < other.major or
          self.minor < other.minor or
-         self.patch < other.patch
+         self.patch < other.patch or
+         (self.prerelease and not other.prerelease) or
+         smallerExtra(self.prerelease, other.prerelease)
 end
 function mt:__pow(other)
   return self.major == other.major and
