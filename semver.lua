@@ -16,12 +16,13 @@ local function present(value)
   return value and value ~= ''
 end
 
-local function parsePrerelease(extra)
+local function parseExtra(extra)
   if not present(extra) then return end
 
-  local prerelease = extra:match("-([%w-][%.%w-]*)")
-  assert(prerelease, ("The prerelease %q must start with a dash and be followed by dashes, alphanumerics or dots."):format(extra))
-  return prerelease
+  local sign, data = extra:match("([-+])([%w-][%.%w-]*)")
+  assert(sign and data, ("The string %q must start with - or + followed by dashes, alphanumerics or dots."):format(extra))
+  if sign == "-" then return data, nil end
+  return nil,data
 end
 
 -- return 0 if a == b, -1 if a < b, and 1 if a > b
@@ -88,14 +89,17 @@ function mt:__eq(other)
   return self.major == other.major and
          self.minor == other.minor and
          self.patch == other.patch and
-         self.prerelease == other.prerelease
+         self.prerelease == other.prerelease and
+         self.build == other.build
 end
 function mt:__lt(other)
   return self.major < other.major or
          self.minor < other.minor or
          self.patch < other.patch or
          (self.prerelease and not other.prerelease) or
-         smallerExtra(self.prerelease, other.prerelease)
+         smallerExtra(self.prerelease, other.prerelease) or
+         (not self.build and other.build) or
+         smallerExtra(self.build, other.build)
 end
 function mt:__pow(other)
   return self.major == other.major and
@@ -103,7 +107,9 @@ function mt:__pow(other)
 end
 function mt:__tostring()
   local buffer = { ("%d.%d.%d"):format(self.major, self.minor, self.patch) }
-  if self.prerelease then table.insert(buffer, "-" .. self.prerelease) end
+  if self.prerelease then buffer[2] = "-" .. self.prerelease
+  elseif self.build  then buffer[2] = "+" .. self.build
+  end
   return table.concat(buffer)
 end
 
@@ -126,9 +132,9 @@ version = function(major, minor, patch, extra)
   checkPositiveInteger(minor, "minor")
   checkPositiveInteger(patch, "patch")
 
-  local prerelease = parsePrerelease(extra)
+  local prerelease, build = parseExtra(extra)
 
-  local result = {major=major, minor=minor, patch=patch, prerelease=prerelease}
+  local result = {major=major, minor=minor, patch=patch, prerelease=prerelease, build=build}
   return setmetatable(result, mt)
 end
 
