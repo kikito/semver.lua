@@ -19,11 +19,36 @@ end
 local function parseExtra(extra)
   if not present(extra) then return end
 
-  local sign, data = extra:match("([-+])([%w-][%.%w-]*)")
-  assert(sign and data, ("The string %q must start with - or + followed by dashes, alphanumerics or dots."):format(extra))
-  if sign == "-" then return data, nil end
-  return nil,data
+  local prereleaseWithSign, buildWithSign = extra:match("^(-[^+]+)(+.+)$")
+  if not (prereleaseWithSign and buildWithSign) then
+    prereleaseWithSign = extra:match("^(-.+)$")
+    buildWithSign      = extra:match("^(+.+)$")
+  end
+  assert(prereleaseWithSign or buildWithSign, ("The parameter %q must begin with + or - to denote a prerelease or a buld"):format(extra))
+
+  local prerelease, build
+
+  if prereleaseWithSign then
+    prerelease = prereleaseWithSign:match("^-(%w[%.%w-]*)$")
+    assert(prerelease, ("The prerelease %q is not a slash followed by alphanumerics, dots and slashes"):format(prereleaseWithSign))
+  end
+
+  if buildWithSign then
+    build = buildWithSign:match("^%+(%w[%.%w-]*)$")
+    assert(build, ("The build %q is not a + sign followed by alphanumerics, dots and slashes"):format(buildWithSign))
+  end
+
+  return prerelease, build
 end
+
+local function parseString(str)
+  local sMajor, sMinor, sPatch, extra = str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+  assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(str))
+  local major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
+  local prerelease, build = parseExtra(extra)
+  return major,minor,patch,prerelease,build
+end
+
 
 -- return 0 if a == b, -1 if a < b, and 1 if a > b
 local function compare(a,b)
@@ -107,32 +132,25 @@ function mt:__pow(other)
 end
 function mt:__tostring()
   local buffer = { ("%d.%d.%d"):format(self.major, self.minor, self.patch) }
-  if self.prerelease then buffer[2] = "-" .. self.prerelease
-  elseif self.build  then buffer[2] = "+" .. self.build
-  end
+  if self.prerelease then table.insert(buffer, "-" .. self.prerelease) end
+  if self.build      then table.insert(buffer, "+" .. self.build) end
   return table.concat(buffer)
 end
 
 
 -- defined as local at the begining of the file
-version = function(major, minor, patch, extra)
+version = function(major, minor, patch, prerelease, build)
   assert(major, "At least one parameter is needed")
 
   if type(major) == 'string' then
-    local sMajor, sMinor, sPatch
-    sMajor, sMinor, sPatch, extra = major:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
-    assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(major))
-    major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
+    major,minor,patch,prerelease,build = parseString(major)
   end
-
   patch = patch or 0
   minor = minor or 0
 
   checkPositiveInteger(major, "major")
   checkPositiveInteger(minor, "minor")
   checkPositiveInteger(patch, "patch")
-
-  local prerelease, build = parseExtra(extra)
 
   local result = {major=major, minor=minor, patch=patch, prerelease=prerelease, build=build}
   return setmetatable(result, mt)
