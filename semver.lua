@@ -16,10 +16,12 @@ local function present(value)
   return value and value ~= ''
 end
 
-local function filterPrerelease(prerelease)
-  local identifiers = prerelease:match("-([%w-][%.%w-]+)")
-  assert(identifiers, ("The prerelease %q must start with a dash and be followed by dashes, alphanumerics or dots."):format(prerelease))
-  return identifiers
+local function parsePrerelease(extra)
+  if not present(extra) then return end
+
+  local prerelease = extra:match("-([%w-][%.%w-]+)")
+  assert(prerelease, ("The prerelease %q must start with a dash and be followed by dashes, alphanumerics or dots."):format(extra))
+  return prerelease
 end
 
 local methods = {}
@@ -58,16 +60,14 @@ end
 
 
 -- defined as local at the begining of the file
-version = function(major, minor, patch, prerelease)
+version = function(major, minor, patch, extra)
   assert(major, "At least one parameter is needed")
 
   if type(major) == 'string' then
-    local sMajor, sMinor, sPatch, sPrerelease = major:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+    local sMajor, sMinor, sPatch
+    sMajor, sMinor, sPatch, extra = major:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
     assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(major))
     major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
-    if present(sPrerelease) then
-      prerelease = filterPrerelease(sPrerelease)
-    end
   end
 
   patch = patch or 0
@@ -76,6 +76,8 @@ version = function(major, minor, patch, prerelease)
   checkPositiveInteger(major, "major")
   checkPositiveInteger(minor, "minor")
   checkPositiveInteger(patch, "patch")
+
+  local prerelease = parsePrerelease(extra)
 
   local result = {major=major, minor=minor, patch=patch, prerelease=prerelease}
   return setmetatable(result, mt)

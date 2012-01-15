@@ -25,7 +25,7 @@ context('semver', function()
       end)
 
       it('parses prereleases, if they exist', function()
-        checkVersion(v(1,2,3,"alpha"), 1,2,3,"alpha")
+        checkVersion(v(1,2,3,"-alpha"), 1,2,3,"alpha")
       end)
     end)
 
@@ -82,7 +82,7 @@ context('semver', function()
     end)
 
     it("works with a prerelease", function()
-      assert_equal("1.2.3-beta", tostring(v(1,2,3,'beta')))
+      assert_equal("1.2.3-beta", tostring(v(1,2,3,'-beta')))
     end)
   end)
 
@@ -116,6 +116,9 @@ context('semver', function()
     end)
     test("false if major =, minor =, but patch >", function()
       assert_greater_than(v'0.0.2', v'0.0.1')
+    end)
+    describe("prereleases", function()
+      
     end)
   end)
 
