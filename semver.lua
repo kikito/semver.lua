@@ -1,4 +1,4 @@
--- semver.lua - v0.1 (2012-01)
+-- semver.lua - v1.0 (2012-01)
 -- Copyright (c) 2012 Enrique García Cota
 -- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 -- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
@@ -15,37 +15,59 @@ local function present(value)
   return value and value ~= ''
 end
 
-local function parseExtra(extra)
-  if not present(extra) then return end
+-- splitByDot("a.bbc.d") == {"a", "bbc", "d"}
+local function splitByDot(str)
+  local t, count = {}, 0
+  str:gsub("([^%.]+)", function(c)
+    count = count + 1
+    t[count] = c
+  end)
+  return t
+end
 
-  local prereleaseWithSign, buildWithSign = extra:match("^(-[^+]+)(+.+)$")
+local function parsePrereleaseAndBuildWithSign(str)
+  local prereleaseWithSign, buildWithSign = str:match("^(-[^+]+)(+.+)$")
   if not (prereleaseWithSign and buildWithSign) then
-    prereleaseWithSign = extra:match("^(-.+)$")
-    buildWithSign      = extra:match("^(+.+)$")
+    prereleaseWithSign = str:match("^(-.+)$")
+    buildWithSign      = str:match("^(+.+)$")
   end
-  assert(prereleaseWithSign or buildWithSign, ("The parameter %q must begin with + or - to denote a prerelease or a buld"):format(extra))
+  assert(prereleaseWithSign or buildWithSign, ("The parameter %q must begin with + or - to denote a prerelease or a build"):format(str))
+  return prereleaseWithSign, buildWithSign
+end
 
-  local prerelease, build
-
+local function parsePrerelease(prereleaseWithSign)
   if prereleaseWithSign then
-    prerelease = prereleaseWithSign:match("^-(%w[%.%w-]*)$")
+    local prerelease = prereleaseWithSign:match("^-(%w[%.%w-]*)$")
     assert(prerelease, ("The prerelease %q is not a slash followed by alphanumerics, dots and slashes"):format(prereleaseWithSign))
+    return prerelease
   end
+end
 
+local function parseBuild(buildWithSign)
   if buildWithSign then
     build = buildWithSign:match("^%+(%w[%.%w-]*)$")
     assert(build, ("The build %q is not a + sign followed by alphanumerics, dots and slashes"):format(buildWithSign))
+    return build
   end
+end
+
+local function parsePrereleaseAndBuild(str)
+  if not present(str) then return nil, nil end
+
+  local prereleaseWithSign, buildWithSign = parsePrereleaseAndBuildWithSign(str)
+
+  local prerelease = parsePrerelease(prereleaseWithSign)
+  local build = parseBuild(buildWithSign)
 
   return prerelease, build
 end
 
-local function parseString(str)
-  local sMajor, sMinor, sPatch, extra = str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+local function parseVersion(str)
+  local sMajor, sMinor, sPatch, sPrereleaseAndBuild = str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
   assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(str))
   local major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
-  local prerelease, build = parseExtra(extra)
-  return major,minor,patch,prerelease,build
+  local prerelease, build = parsePrereleaseAndBuild(sPrereleaseAndBuild)
+  return major, minor, patch, prerelease, build
 end
 
 
@@ -71,29 +93,20 @@ local function compareIds(selfId, otherId)
   end
 end
 
-local function splitByDot(str)
-  local t, count = {}, 0
-  str:gsub("([^%.]+)", function(c)
-    count = count + 1
-    t[count] = c
-  end)
-  return t
-end
+local function smallerPrereleaseOrBuild(mine, his)
+  if mine == his then return false end
 
-local function smallerExtra(selfExtra, otherExtra)
-  if selfExtra == otherExtra then return false end
-
-  local selfIds, otherIds = splitByDot(selfExtra), splitByDot(otherExtra)
-  local selfLength = #selfIds
+  local myIds, hisIds = splitByDot(mine), splitByDot(his)
+  local myLength = #myIds
   local comparison
 
-  for i = 1, selfLength do
-    comparison = compareIds(selfIds[i], otherIds[i])
+  for i = 1, myLength do
+    comparison = compareIds(myIds[i], hisIds[i])
     if comparison ~= 0 then return comparison == -1 end
     -- if comparison == 0, continue loop
   end
 
-  return selfLength < #otherIds
+  return myLength < #hisIds
 end
 
 local methods = {}
@@ -121,9 +134,9 @@ function mt:__lt(other)
          self.minor < other.minor or
          self.patch < other.patch or
          (self.prerelease and not other.prerelease) or
-         smallerExtra(self.prerelease, other.prerelease) or
+         smallerPrereleaseOrBuild(self.prerelease, other.prerelease) or
          (not self.build and other.build) or
-         smallerExtra(self.build, other.build)
+         smallerPrereleaseOrBuild(self.build, other.build)
 end
 function mt:__pow(other)
   return self.major == other.major and
@@ -142,7 +155,7 @@ version = function(major, minor, patch, prerelease, build)
   assert(major, "At least one parameter is needed")
 
   if type(major) == 'string' then
-    major,minor,patch,prerelease,build = parseString(major)
+    major,minor,patch,prerelease,build = parseVersion(major)
   end
   patch = patch or 0
   minor = minor or 0
