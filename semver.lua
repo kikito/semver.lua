@@ -1,10 +1,10 @@
--- semver.lua - v1.0 (2012-01)
+-- semver.lua - v1.1.0 (2012-01)
 -- Copyright (c) 2012 Enrique García Cota
 -- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 -- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 -- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -- See http://semver.org for details
-local version
+local version = {}
 
 local function checkPositiveInteger(number, name)
   assert(number >= 0, name .. ' must be a valid positive number')
@@ -149,9 +149,7 @@ function mt:__tostring()
   return table.concat(buffer)
 end
 
-
--- defined as local at the begining of the file
-version = function(major, minor, patch, prerelease, build)
+local function new(major, minor, patch, prerelease, build)
   assert(major, "At least one parameter is needed")
 
   if type(major) == 'string' then
@@ -167,5 +165,9 @@ version = function(major, minor, patch, prerelease, build)
   local result = {major=major, minor=minor, patch=patch, prerelease=prerelease, build=build}
   return setmetatable(result, mt)
 end
+
+setmetatable(version, { __call = function(_, ...) return new(...) end })
+
+version._VERSION = version('1.1.0')
 
 return version

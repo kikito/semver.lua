@@ -257,4 +257,11 @@ context('semver', function()
     end)
   end)
 
+  describe("_VERSION", function()
+    it("can be extracted from the lib", function()
+      local x = v._VERSION
+      assert_equal('table', type(x))
+    end)
+  end)
+
 end)
