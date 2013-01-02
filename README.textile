@@ -1,4 +1,6 @@
-h1. semver.lua 
+h1. semver.lua
+
+!https://travis-ci.org/kikito/semver.lua.png?branch=master!:https://travis-ci.org/kikito/semver.lua
 
 Semantic versioning for Lua.
 
