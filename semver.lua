@@ -45,7 +45,7 @@ end
 
 local function parseBuild(buildWithSign)
   if buildWithSign then
-    build = buildWithSign:match("^%+(%w[%.%w-]*)$")
+    local build = buildWithSign:match("^%+(%w[%.%w-]*)$")
     assert(build, ("The build %q is not a + sign followed by alphanumerics, dots and slashes"):format(buildWithSign))
     return build
   end
