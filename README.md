@@ -1,14 +1,14 @@
-h1. semver.lua
+# semver.lua
 
-!https://travis-ci.org/kikito/semver.lua.png?branch=master!:https://travis-ci.org/kikito/semver.lua
+[![Build Status](https://travis-ci.org/kikito/semver.lua.svg?branch=master)](https://travis-ci.org/kikito/semver.lua)
 
 Semantic versioning for Lua.
 
 See http://semver.org/ for details about semantic versioning.
 
-h1. Documentation
+# Documentation
 
-<pre class="lua">
+``` lua
 local v = require 'semver'
 
 -- two ways of creating it: with separate parameters, or with one string
@@ -54,24 +54,25 @@ v(1,0,0):nextPatch() -- v1.0.1
 v(1,2,3):nextMinor() -- v1.3.0 . Notice the patch resets to 0
 v(1,2,3):nextMajor() -- v2.0.0 . Minor and patch are reset to 0
 
-</pre>
+```
 
+# Installation
 
-h1. Installation
+Just copy the semver.lua file wherever you want it (for example on a lib/ folder). Then write this in any Lua file where you want to use it. You must assign the require to a global or local variable (I use a local `v`):
 
-Just copy the semver.lua file wherever you want it (for example on a lib/ folder). Then write this in any Lua file where you want to use it. You must assign the require to a global or local variable (I use a local @v@):
+``` lua
+local v = require 'semver'
+```
 
-<pre>local v = require 'semver'</pre>
+Using `v` allows for the nice string syntax: `v'1.2.3-alpha'`.
 
-Using @v@ allows for the nice string syntax: @v'1.2.3-alpha'@.
-
-The @package.path@ variable must be configured so that the folder in which middleclass.lua is copied is available, of course.
+The `package.path` variable must be configured so that the folder in which middleclass.lua is copied is available, of course.
 
 Please make sure that you read the license, too (for your convenience it's now included at the beginning of the semver.lua file).
 
-h1. Notes about version comparison
+# Notes about version comparison
 
-Version comparison is done according to the specs:
+Version comparison is done according to the semver 2.0.0 specs:
 
 Major, minor, and patch versions are always compared numerically.
 
@@ -81,11 +82,18 @@ Pre-release and build version precedence MUST be determined by comparing each do
 * Identifiers with letters or dashes are compared lexically in ASCII sort order.
 * Numeric identifiers always have lower precedence than non-numeric identifiers
 
-h1. Specs
+# Specs
 
-This project uses "telescope":https://github.com/norman/telescope for its specs. If you want to run the specs, you will have to install telescope first. Then just execute the following from the root inspect folder:
+This project uses "busted":http://olivinelabs.com/busted/ for its specs. If you want to run the specs, you will have to install telescope first. Then just execute the following from the root inspect folder:
 
-<pre>
-tsc -f spec/*
-</pre>
+```
+busted
+```
+
+# Changelog
+
+## v1.1.1:
+* Removed global variable which was declared by mistake
+* Changed spec tool from telescope to busted
+* Changed README format from textile to markdown
 
