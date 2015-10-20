@@ -40,7 +40,7 @@ d.build -- 'no.extensions.22'
 v'1.2.3' == v(1,2,3)         -- true
 v'1.2.3' < v(4,5,6)          -- true
 v'1.2.3-alpha' < v'1.2.3'    -- true
-v'1.2.3' < v'1.2.3-build.1'  -- true
+v'1.2.3' < v'1.2.3+build.1'  -- false, builds are ignored when comparing versions in semver
 -- (see the "notes" section for more informaion about version comparison)
 
 -- "pessimistic upgrade" operator: ^
@@ -76,11 +76,13 @@ Version comparison is done according to the semver 2.0.0 specs:
 
 Major, minor, and patch versions are always compared numerically.
 
-Pre-release and build version precedence MUST be determined by comparing each dot-separated identifier as follows:
+Pre-release precedence MUST be determined by comparing each dot-separated identifier as follows:
 
 * Identifiers consisting of only digits are compared numerically
 * Identifiers with letters or dashes are compared lexically in ASCII sort order.
 * Numeric identifiers always have lower precedence than non-numeric identifiers
+
+Builds are ignored when calculating precedence: version 1.2.3 and 1.2.3+build5 are considered equal.
 
 # Specs
 
@@ -96,4 +98,8 @@ busted
 * Removed global variable which was declared by mistake
 * Changed spec tool from telescope to busted
 * Changed README format from textile to markdown
+## v.1.2.0:
+* Fix error: builds were being used for comparison, but according with semver 2.0.0 they should be ignored (so v'1.0.0-build1' is equal to v'1.0.0-build2')
+* Fix several errors and inconsistencies in the way the comparisons where implemented.
+* Added a lot more tests to cover more edge cases when comparing versions
 
