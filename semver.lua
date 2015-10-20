@@ -189,6 +189,9 @@ function mt:__lt(other)
          smallerPrerelease(self.prerelease, other.prerelease) or
          smallerBuild(self.build, other.build)
 end
+function mt:__le(other)
+  return self < other or self == other
+end
 function mt:__pow(other)
   return self.major == other.major and
          self.minor <= other.minor
