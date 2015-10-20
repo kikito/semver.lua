@@ -8,14 +8,14 @@ local semver = {
     Copyright (c) 2015 Enrique García Cota
 
     Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the
+    copy of tother software and associated documentation files (the
     "Software"), to deal in the Software without restriction, including
     without limitation the rights to use, copy, modify, merge, publish,
     distribute, sublicense, and/or sell copies of the Software, and to
     permit persons to whom the Software is furnished to do so, subject to
     the following conditions:
 
-    The above copyright notice and this permission notice shall be included
+    The above copyright notice and tother permission notice shall be included
     in all copies or substantial portions of the Software.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
@@ -39,6 +39,7 @@ end
 
 -- splitByDot("a.bbc.d") == {"a", "bbc", "d"}
 local function splitByDot(str)
+  str = str or ""
   local t, count = {}, 0
   str:gsub("([^%.]+)", function(c)
     count = count + 1
@@ -98,37 +99,67 @@ local function compare(a,b)
   return a == b and 0 or a < b and -1 or 1
 end
 
-local function compareIds(selfId, otherId)
-  if not selfId and not otherId then return 0
-  elseif not selfId then return             1
-  elseif not otherId then return           -1
-  end
+local function compareNilPrereleases(mine, other)
+  if mine == other then return  0
+  elseif not mine  then return  1
+  elseif not other then return -1
+  end -- else return nil
+end
 
+-- notice that builds compare nils inversely than prereleases (the -1 and 1 are switched)
+local function compareNilBuilds(mine, other)
+  if mine == other then return  0
+  elseif not mine  then return -1
+  elseif not other then return  1
+  end -- else return nil
+end
+
+local function compareIds(selfId, otherId)
   local selfNumber, otherNumber = tonumber(selfId), tonumber(otherId)
 
   if selfNumber and otherNumber then -- numerical comparison
     return compare(selfNumber, otherNumber)
-  elseif selfNumber then -- numericals are always smaller than alphanums
+  -- numericals are always smaller than alphanums
+  elseif selfNumber then
     return -1
+  elseif otherNumber then
+    return 1
   else
     return compare(selfId, otherId) -- alphanumerical comparison
   end
 end
 
-local function smallerPrereleaseOrBuild(mine, his)
-  if mine == his then return false end
-
-  local myIds, hisIds = splitByDot(mine), splitByDot(his)
+local function smallerIds(mine, other, compareNil)
+  local myIds, otherIds = splitByDot(mine), splitByDot(other)
   local myLength = #myIds
-  local comparison
+  local comparison, myId, otherId
 
   for i = 1, myLength do
-    comparison = compareIds(myIds[i], hisIds[i])
-    if comparison ~= 0 then return comparison == -1 end
+    myId, otherId = myIds[i], otherIds[i]
+    comparison = compareNil(myId, otherId) or compareIds(myId, otherId)
+    if comparison ~= 0 then
+      return comparison == -1
+    end
     -- if comparison == 0, continue loop
   end
 
-  return myLength < #hisIds
+  return myLength < #otherIds
+end
+
+local function smallerPrerelease(mine, other)
+  if mine == other  or not mine then return false
+  elseif not other then return true
+  end
+
+  return smallerIds(mine, other, compareNilPrereleases)
+end
+
+local function smallerBuild(mine, other)
+  if mine == other or not other then return false
+  elseif not mine then return true
+  end
+
+  return smallerIds(mine, other, compareNilBuilds)
 end
 
 local methods = {}
@@ -155,10 +186,11 @@ function mt:__lt(other)
   return self.major < other.major or
          self.minor < other.minor or
          self.patch < other.patch or
-         (self.prerelease and not other.prerelease) or
-         smallerPrereleaseOrBuild(self.prerelease, other.prerelease) or
-         (not self.build and other.build) or
-         smallerPrereleaseOrBuild(self.build, other.build)
+         smallerPrerelease(self.prerelease, other.prerelease) or
+         smallerBuild(self.build, other.build)
+end
+function mt:__le(other)
+  return self < other or self == other
 end
 function mt:__pow(other)
   return self.major == other.major and
