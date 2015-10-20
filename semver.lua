@@ -99,23 +99,13 @@ local function compare(a,b)
   return a == b and 0 or a < b and -1 or 1
 end
 
-local function compareNilPrereleases(mine, other)
-  if mine == other then return  0
-  elseif not mine  then return  1
-  elseif not other then return -1
-  end -- else return nil
-end
+local function compareIds(myId, otherId)
+  if myId == otherId then return  0
+  elseif not myId    then return -1
+  elseif not otherId then return  1
+  end
 
--- notice that builds compare nils inversely than prereleases (the -1 and 1 are switched)
-local function compareNilBuilds(mine, other)
-  if mine == other then return  0
-  elseif not mine  then return -1
-  elseif not other then return  1
-  end -- else return nil
-end
-
-local function compareIds(selfId, otherId)
-  local selfNumber, otherNumber = tonumber(selfId), tonumber(otherId)
+  local selfNumber, otherNumber = tonumber(myId), tonumber(otherId)
 
   if selfNumber and otherNumber then -- numerical comparison
     return compare(selfNumber, otherNumber)
@@ -125,18 +115,16 @@ local function compareIds(selfId, otherId)
   elseif otherNumber then
     return 1
   else
-    return compare(selfId, otherId) -- alphanumerical comparison
+    return compare(myId, otherId) -- alphanumerical comparison
   end
 end
 
-local function smallerIds(mine, other, compareNil)
-  local myIds, otherIds = splitByDot(mine), splitByDot(other)
+local function smallerIdList(myIds, otherIds)
   local myLength = #myIds
-  local comparison, myId, otherId
+  local comparison
 
-  for i = 1, myLength do
-    myId, otherId = myIds[i], otherIds[i]
-    comparison = compareNil(myId, otherId) or compareIds(myId, otherId)
+  for i=1, myLength do
+    comparison = compareIds(myIds[i], otherIds[i])
     if comparison ~= 0 then
       return comparison == -1
     end
@@ -147,19 +135,11 @@ local function smallerIds(mine, other, compareNil)
 end
 
 local function smallerPrerelease(mine, other)
-  if mine == other  or not mine then return false
+  if mine == other or not mine then return false
   elseif not other then return true
   end
 
-  return smallerIds(mine, other, compareNilPrereleases)
-end
-
-local function smallerBuild(mine, other)
-  if mine == other or not other then return false
-  elseif not mine then return true
-  end
-
-  return smallerIds(mine, other, compareNilBuilds)
+  return smallerIdList(splitByDot(mine), splitByDot(other))
 end
 
 local methods = {}
@@ -179,16 +159,19 @@ function mt:__eq(other)
   return self.major == other.major and
          self.minor == other.minor and
          self.patch == other.patch and
-         self.prerelease == other.prerelease and
-         self.build == other.build
+         self.prerelease == other.prerelease
+         -- notice that build is ignored for precedence in semver 2.0.0
 end
 function mt:__lt(other)
-  return self.major < other.major or
-         self.minor < other.minor or
-         self.patch < other.patch or
-         smallerPrerelease(self.prerelease, other.prerelease) or
-         smallerBuild(self.build, other.build)
+  if self.major ~= other.major then return self.major < other.major end
+  if self.minor ~= other.minor then return self.minor < other.minor end
+  if self.patch ~= other.patch then return self.patch < other.patch end
+  return smallerPrerelease(self.prerelease, other.prerelease)
+  -- notice that build is ignored for precedence in semver 2.0.0
 end
+-- This works like the "pessimisstic operator" in Rubygems.
+-- if a and b are versions, a ^ b means "b is backwards-compatible with a"
+-- in other words, "it's safe to upgrade from a to b"
 function mt:__pow(other)
   return self.major == other.major and
          self.minor <= other.minor
