@@ -183,8 +183,6 @@ function mt:__eq(other)
          self.build == other.build
 end
 function mt:__lt(other)
-  print(self.build, other.build, smallerBuild(self.build, other.build))
-
   return self.major < other.major or
          self.minor < other.minor or
          self.patch < other.patch or
