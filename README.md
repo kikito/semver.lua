@@ -98,8 +98,9 @@ busted
 * Removed global variable which was declared by mistake
 * Changed spec tool from telescope to busted
 * Changed README format from textile to markdown
+
 ## v.1.2.0:
-* Fix error: builds were being used for comparison, but according with semver 2.0.0 they should be ignored (so v'1.0.0-build1' is equal to v'1.0.0-build2')
+* Fix error: builds were being used for comparison, but according with semver 2.0.0 they should be ignored (so v'1.0.0+build1' is equal to v'1.0.0+build2')
 * Fix several errors and inconsistencies in the way the comparisons where implemented.
 * Added a lot more tests to cover more edge cases when comparing versions
 
