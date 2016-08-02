@@ -173,6 +173,7 @@ end
 -- if a and b are versions, a ^ b means "b is backwards-compatible with a"
 -- in other words, "it's safe to upgrade from a to b"
 function mt:__pow(other)
+  if self.major == 0 then return false end
   return self.major == other.major and
          self.minor <= other.minor
 end
