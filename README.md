@@ -104,3 +104,6 @@ busted
 * Fix several errors and inconsistencies in the way the comparisons where implemented.
 * Added a lot more tests to cover more edge cases when comparing versions
 
+## v.1.2.1
+* Fix error on pessimistic update operator when applied to a 0.x.x version
+
