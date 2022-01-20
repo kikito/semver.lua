@@ -66,8 +66,6 @@ local v = require 'semver'
 
 Using `v` allows for the nice string syntax: `v'1.2.3-alpha'`.
 
-The `package.path` variable must be configured so that the folder in which middleclass.lua is copied is available, of course.
-
 Please make sure that you read the license, too (for your convenience it's now included at the beginning of the semver.lua file).
 
 # Notes about version comparison
