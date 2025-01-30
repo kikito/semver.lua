@@ -84,7 +84,7 @@ Builds are ignored when calculating precedence: version 1.2.3 and 1.2.3+build5 a
 
 # Specs
 
-This project uses "busted":http://olivinelabs.com/busted/ for its specs. If you want to run the specs, you will have to install telescope first. Then just execute the following from the root inspect folder:
+This project uses [`busted`](https://lunarmodules.github.io/busted/) for its specs. If you want to run the specs, you will have to install telescope first. Then just execute the following from the root inspect folder:
 
 ```
 busted
